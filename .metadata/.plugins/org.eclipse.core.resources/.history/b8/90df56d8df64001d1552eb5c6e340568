@@ -1,0 +1,72 @@
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.border.EmptyBorder;
+
+public class GameClientEstablishView extends JFrame {
+
+	private JPanel contentPane;
+	private JTextField serverNameTextField;
+	private String serverName;
+
+	/**
+	 * Create the application.
+	 */
+	public GameClientEstablishView() {
+		initialize();
+	}
+
+	/**
+	 * Initialize the contents of the frame.
+	 */
+	private void initialize() {
+		setResizable(false);
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setBounds(100, 100, 250, 150);
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(contentPane);
+		contentPane.setLayout(null);
+
+		serverNameTextField = new JTextField();
+		serverNameTextField.setFont(new Font("Dialog", Font.PLAIN, 16));
+		serverNameTextField.setBounds(12, 38, 150, 40);
+		contentPane.add(serverNameTextField);
+		serverNameTextField.setColumns(10);
+		serverNameTextField.addKeyListener(new KeyAdapter() {
+
+			@Override
+			public void keyTyped(KeyEvent e) {
+				// TODO Auto-generated method stub
+				serverName = serverNameTextField.getText();
+			}
+
+		});
+
+		JButton btnSubmit = new JButton("개설");
+		btnSubmit.setBounds(174, 38, 60, 40);
+		contentPane.add(btnSubmit);
+		btnSubmit.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				serverName = serverNameTextField.getText();
+				dispose();
+			}
+
+		});
+
+		setVisible(true);
+	}
+
+	public String getServerName() {
+		return serverName;
+	}
+}

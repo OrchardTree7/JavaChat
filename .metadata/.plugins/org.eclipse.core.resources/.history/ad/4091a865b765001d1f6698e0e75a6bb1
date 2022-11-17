@@ -1,0 +1,25 @@
+import javax.swing.JFrame;
+
+public class ChatClientView extends JFrame {
+
+	private static final long serialVersionUID = 1L;
+	
+
+	/**
+	 * Create the application.
+	 */
+	public ChatClientView(String username, String ip_addr, String port_no) {
+		initialize();
+	}
+
+	/**
+	 * Initialize the contents of the frame.
+	 */
+	private void initialize() {
+		frame = new JFrame();
+		frame.setBounds(100, 100, 391, 541);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+	}
+
+}

@@ -1,0 +1,32 @@
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
+
+public class ChatClientView extends JFrame {
+
+	private static final long serialVersionUID = 1L;
+
+	private JPanel contentPane;
+
+	/**
+	 * Create the application.
+	 */
+	public ChatClientView(String username, String ip_addr, String port_no) {
+		initialize();
+	}
+
+	/**
+	 * Initialize the contents of the frame.
+	 */
+	private void initialize() {
+		setResizable(false);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(100, 100, 617, 548);
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(contentPane);
+		contentPane.setLayout(null);
+
+	}
+
+}

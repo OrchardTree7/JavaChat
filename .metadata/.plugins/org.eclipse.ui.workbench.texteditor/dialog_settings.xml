@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
+		<item key="selection" value="Socket"/>
+		<item key="wrap" value="false"/>
+		<item key="casesensitive" value="false"/>
+		<item key="wholeword" value="false"/>
+		<item key="incremental" value="false"/>
+		<item key="isRegEx" value="false"/>
+		<list key="findhistory">
+			<item value="socket"/>
+			<item value="300"/>
+			<item value="txtInput"/>
+			<item value="enter"/>
+			<item value="listennet"/>
+			<item value="listen"/>
+			<item value="Listento"/>
+			<item value="Listen"/>
+			<item value="ListenNetwork"/>
+			<item value="code"/>
+			<item value="data"/>
+			<item value="sendObject"/>
+			<item value="establish"/>
+			<item value="game"/>
+			<item value="gamec"/>
+		</list>
+		<list key="replacehistory">
+		</list>
+	</section>
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
+		<item key="DIALOG_X_ORIGIN" value="794"/>
+		<item key="DIALOG_Y_ORIGIN" value="231"/>
+		<item key="DIALOG_WIDTH" value="338"/>
+		<item key="DIALOG_HEIGHT" value="430"/>
+		<item key="DIALOG_FONT_NAME" value="1|Ubuntu|10.0|0|GTK|1|"/>
+	</section>
+</section>

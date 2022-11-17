@@ -1,0 +1,72 @@
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Image;
+
+import javax.swing.BoxLayout;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+
+public class ChatClientView extends JFrame {
+
+	private static final long serialVersionUID = 1L;
+	
+	private ImageIcon friendListIcon = new ImageIcon 
+
+	private JPanel contentPane;
+
+	/**
+	 * Create the application.
+	 */
+	public ChatClientView(String username, String ip_addr, String port_no) {
+		initialize();
+	}
+
+	/**
+	 * Initialize the contents of the frame.
+	 */
+	private void initialize() {
+
+		setResizable(false);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(100, 100, 391, 541);
+		contentPane = new JPanel();
+		contentPane.setBorder(null);
+		setContentPane(contentPane);
+		contentPane.setLayout(null);
+
+		JPanel panel = new JPanel();
+		panel.setBorder(null);
+		panel.setBounds(0, 0, 60, 60);
+		contentPane.add(panel);
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setBounds(60, 0, 329, 514);
+		contentPane.add(scrollPane);
+
+		JPanel panel_1 = new JPanel();
+		panel_1.setBounds(0, 60, 60, 60);
+		contentPane.add(panel_1);
+
+		JPanel panel_2 = new JPanel();
+		panel_2.setBounds(0, 120, 60, 60);
+		contentPane.add(panel_2);
+		setVisible(true);
+
+	}
+
+	class ImagePanel extends JPanel {
+		private Image img;
+
+		public ImagePanel(Image img) {
+			this.img = img;
+		}
+
+		@Override
+		public void paintComponent(Graphics g) {
+			Dimension d = getSize();
+			g.drawImage(img, 0, 0, d.width, d.height, null);
+		}
+	}
+}
