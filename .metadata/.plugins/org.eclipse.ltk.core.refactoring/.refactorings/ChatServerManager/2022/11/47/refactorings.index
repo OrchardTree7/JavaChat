@@ -2,3 +2,5 @@
 1668514787876	Rename type 'GameServerManager'
 1668610205852	Rename type 'ChatServerManager'
 1668649369325	Delete element
+1668650207067	Rename type 'ChatServer'
+1668650233356	Rename type 'ChatServerManager'

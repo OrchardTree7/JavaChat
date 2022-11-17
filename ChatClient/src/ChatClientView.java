@@ -17,6 +17,16 @@ public class ChatClientView extends JFrame {
 
 	private ImageIcon friendListIcon = new ImageIcon("./friendList_icon.png");
 	private ImageIcon talkListIcon = new ImageIcon("./talkList_icon.png");
+	private ImageIcon dotsIcon = new ImageIcon("./dots_icon.png");
+
+	private ImagePanel friendListBtn = new ImagePanel(friendListIcon.getImage());
+	private ImagePanel talkListBtn = new ImagePanel(talkListIcon.getImage());
+	private ImagePanel dotsBtn = new ImagePanel(dotsIcon.getImage());
+
+	private JLabel listHeading = new JLabel("친구");
+	private JScrollPane mainScrollPane = new JScrollPane();
+
+	private JPanel friendListPanel = new JPanel();
 
 	private JPanel contentPane;
 
@@ -41,26 +51,25 @@ public class ChatClientView extends JFrame {
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 
-		ImagePanel panel = new ImagePanel(friendListIcon.getImage());
-		panel.setBorder(null);
-		panel.setBounds(0, 0, 40, 40);
-		contentPane.add(panel);
+		friendListBtn.setBorder(null);
+		friendListBtn.setBounds(0, 0, 40, 40);
+		contentPane.add(friendListBtn);
 
-		ImagePanel panel_1 = new ImagePanel(talkListIcon.getImage());
-		panel_1.setBounds(0, 50, 40, 40);
-		contentPane.add(panel_1);
+		talkListBtn.setBounds(0, 50, 40, 40);
+		contentPane.add(talkListBtn);
 
-		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(40, 0, 349, 514);
-		contentPane.add(scrollPane);
+		dotsBtn.setBounds(0, 100, 40, 40);
+		contentPane.add(dotsBtn);
 
-		JLabel lblNewLabel = new JLabel("친구");
-		lblNewLabel.setFont(new Font("Dialog", Font.BOLD, 24));
-		scrollPane.setColumnHeaderView(lblNewLabel);
+		mainScrollPane.setBounds(50, 0, 339, 514);
+		contentPane.add(mainScrollPane);
 
-		JPanel panel_2 = new JPanel();
-		scrollPane.setViewportView(panel_2);
-		panel_2.setLayout(new BoxLayout(panel_2, BoxLayout.Y_AXIS));
+		listHeading.setFont(new Font("Dialog", Font.BOLD, 24));
+		mainScrollPane.setColumnHeaderView(listHeading);
+		friendListPanel.setBorder(null);
+
+		mainScrollPane.setViewportView(friendListPanel);
+		friendListPanel.setLayout(new BoxLayout(friendListPanel, BoxLayout.Y_AXIS));
 
 		setVisible(true);
 
