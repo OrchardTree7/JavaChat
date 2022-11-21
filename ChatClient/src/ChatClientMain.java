@@ -23,10 +23,10 @@ public class ChatClientMain extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 
-	private ImageIcon basicProfileIcon = new ImageIcon("./basic_profile.jpeg");
+	private ImageIcon mainLogoIcon = new ImageIcon("./mainLogo_icon.png");
 
 	private JPanel contentPane;
-	private JPanel profilePanel;
+	private JPanel logoPanel;
 
 	private HintTextField userIDTextField;
 	private HintTextField passwordTextField;
@@ -85,9 +85,9 @@ public class ChatClientMain extends JFrame {
 		contentPane.add(passwordTextField);
 		passwordTextField.setColumns(10);
 
-		profilePanel = new ImagePanel(basicProfileIcon.getImage());
-		profilePanel.setBounds(150, 100, 100, 100);
-		contentPane.add(profilePanel);
+		logoPanel = new ImagePanel(mainLogoIcon.getImage());
+		logoPanel.setBounds(150, 100, 100, 100);
+		contentPane.add(logoPanel);
 
 		Myaction action = new Myaction();
 		btnConnect.addActionListener(action);
