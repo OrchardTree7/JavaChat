@@ -4,6 +4,10 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -16,6 +20,18 @@ import javax.swing.JScrollPane;
 public class ChatClientView extends JFrame {
 
 	private static final long serialVersionUID = 1L;
+
+	private String userId;
+	private String ipAddr;
+	private int port;
+
+	private Socket socket;
+
+	private ObjectInputStream ois;
+	private ObjectOutputStream oos;
+
+	private String[] userlist;
+	private String[] roomlist;
 
 	private ImageIcon friendListIcon = new ImageIcon("./friendList_icon.png");
 	private ImageIcon roomListIcon = new ImageIcon("./roomList_icon.png");
@@ -48,7 +64,28 @@ public class ChatClientView extends JFrame {
 	/**
 	 * Create the application.
 	 */
-	public ChatClientView(String username, String ip_addr, String port_no) {
+	public ChatClientView(String user_id, String ip_addr, String port_no) {
+		userId = user_id;
+		ipAddr = ip_addr;
+		port = Integer.parseInt(port_no);
+
+		try {
+			socket = new Socket(ip_addr, Integer.parseInt(port_no));
+
+			oos = new ObjectOutputStream(socket.getOutputStream());
+			oos.flush();
+			ois = new ObjectInputStream(socket.getInputStream());
+
+			ChatMsg obcm = new ChatMsg(userId, "100", "Login");
+			SendObject(obcm);
+		} catch (NumberFormatException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		ListenNetwork net = new ListenNetwork();
+		net.start();
+
 		initialize();
 	}
 
@@ -156,5 +193,79 @@ public class ChatClientView extends JFrame {
 
 		setVisible(true);
 
+	}
+
+	class ListenNetwork extends Thread {
+		@Override
+		public void run() {
+			while (true) {
+				try {
+
+					// obcm 그대로 사용시 cm.data 내용 출력됨
+					Object obcm = null;
+					String[] list;
+					try {
+						obcm = ois.readObject();
+					} catch (ClassNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						break;
+					}
+					if (obcm == null)
+						break;
+
+					list = obcm.toString().split(" ");
+
+					if (list[list.length - 1].equals("userlist")) {
+						for (int i = 0; i < list.length - 1; i++) {
+							if (userlist[i] == null) {
+								userlist[i] = list[i];
+								JButton item = new JButton(basicProfileIcon);
+								item.setText(list[i]);
+								item.setBorderPainted(false);
+								item.setContentAreaFilled(false);
+								item.setFocusPainted(false);
+								friendMainPanel.add(item);
+							} else {
+								if (!userlist[i].equals(list[i])) {
+
+								}
+							}
+						}
+						friendMainPanel.revalidate();
+					} else if (list[list.length - 1].equals("roomlist")) {
+						for (int i = 0; i < list.length - 1; i++) {
+							JButton item = new JButton(basicProfileIcon);
+							item.setText(list[i]);
+							item.setBorderPainted(false);
+							item.setContentAreaFilled(false);
+							item.setFocusPainted(false);
+							roomMainPanel.add(item);
+						}
+						roomMainPanel.revalidate();
+					}
+
+				} catch (IOException e) {
+					try {
+						ois.close();
+						oos.close();
+						socket.close();
+
+						break;
+					} catch (Exception ee) {
+						break;
+					} // catch문 끝
+				} // 바깥 catch문끝
+
+			}
+		}
+	}
+
+	public void SendObject(Object ob) { // 서버로 메세지를 보내는 메소드
+		try {
+			oos.writeObject(ob);
+		} catch (IOException e) {
+			// textArea.append("메세지 송신 에러!!\n");
+		}
 	}
 }

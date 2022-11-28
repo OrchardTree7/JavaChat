@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Vector;
@@ -13,8 +14,8 @@ public class ChatServer extends Thread {
 
 	private static ServerSocket socket; // 서버소켓
 	private Socket client_socket; // accept() 에서 생성된 client 소켓
-	private Vector UserVec = new Vector(); // 연결된 사용자를 저장할 벡터
-	private Vector<ChatRoom> RoomVec = new Vector<ChatRoom>();
+	private Vector<UserService> userVec = new Vector(); // 연결된 사용자를 저장할 벡터
+	private Vector<ChatRoom> roomVec = new Vector<ChatRoom>();
 	private static final int BUF_LEN = 128; // Windows 처럼 BUF_LEN 을 정의
 
 	public static void main(String[] args) {
@@ -32,12 +33,13 @@ public class ChatServer extends Thread {
 
 	@Override
 	public void run() {
+		System.out.println("서버 시작");
 		while (true) { // 사용자 접속을 계속해서 받기 위해 while문
 			try {
 				client_socket = socket.accept(); // accept가 일어나기 전까지는 무한 대기중
 				// User 당 하나씩 Thread 생성
 				UserService new_user = new UserService(client_socket);
-				UserVec.add(new_user); // 새로운 참가자 배열에 추가
+				userVec.add(new_user); // 새로운 참가자 배열에 추가
 				new_user.start(); // 만든 객체의 스레드 실행
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -56,7 +58,7 @@ public class ChatServer extends Thread {
 		private ObjectOutputStream oos;
 
 		private Socket client_socket;
-		public String UserName = "";
+		public String userId = "";
 
 		public UserService(Socket client_socket) {
 			this.client_socket = client_socket;
@@ -71,12 +73,80 @@ public class ChatServer extends Thread {
 			}
 		}
 
-		public void Login() {
+		public void Login(String user_id) {
+			userId = user_id;
 
+			String userlist = MakeUserList();
+			String roomlist = MakeRoomList();
+			WriteAllObject(userlist);
+			WriteAllObject(roomlist);
 		}
 
 		public void Logout() {
-			UserVec.removeElement(this); // Logout한 현재 객체를 벡터에서 지운다
+			userVec.removeElement(this); // Logout한 현재 객체를 벡터에서 지운다
+		}
+
+		public void WriteOneObject(Object ob) {
+			try {
+				oos.writeObject(ob);
+			} catch (IOException e) {
+				try {
+					ois.close();
+					oos.close();
+					client_socket.close();
+					client_socket = null;
+					ois = null;
+					oos = null;
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				Logout();
+			}
+		}
+
+		public void WriteAllObject(Object ob) {
+			for (int i = 0; i < userVec.size(); i++) {
+				UserService user = userVec.elementAt(i);
+				user.WriteOneObject(ob);
+			}
+		}
+
+		public String MakeUserList() {
+			StringBuilder temp = new StringBuilder();
+			for (int i = 0; i < userVec.size(); i++) {
+				UserService user = userVec.elementAt(i);
+				temp.append(user.userId + " ");
+			}
+			temp.append("userlist");
+			return temp.toString();
+		}
+
+		public String MakeRoomList() {
+			StringBuilder temp = new StringBuilder();
+			for (int i = 0; i < roomVec.size(); i++) {
+				ChatRoom room = roomVec.elementAt(i);
+				temp.append(room.roomId + " ");
+			}
+			temp.append("roomlist");
+			return temp.toString();
+		}
+
+		public byte[] MakePacket(String msg) {
+			byte[] packet = new byte[BUF_LEN];
+			byte[] bb = null;
+			int i;
+			for (i = 0; i < BUF_LEN; i++)
+				packet[i] = 0;
+			try {
+				bb = msg.getBytes("euc-kr");
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			for (i = 0; i < bb.length; i++)
+				packet[i] = bb[i];
+			return packet;
 		}
 
 		@Override
@@ -102,7 +172,8 @@ public class ChatServer extends Thread {
 					} else
 						continue;
 					if (cm.code.matches("100")) {
-
+						Login(cm.userId);
+						System.out.println(cm.userId + " " + cm.data);
 					}
 				} catch (IOException e) {
 

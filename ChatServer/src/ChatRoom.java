@@ -2,7 +2,7 @@ import java.util.Vector;
 
 public class ChatRoom {
 
-	private int roomId;
+	public int roomId;
 	private Vector UserVec = new Vector();
 	private static final int BUF_LEN = 128;
 

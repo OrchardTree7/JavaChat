@@ -79,11 +79,11 @@ public class ChatClientMain extends JFrame {
 		btnConnect.setBounds(78, 352, 244, 39);
 		contentPane.add(btnConnect);
 
-		passwordTextField = new HintTextField("비밀번호 입력");
-		passwordTextField.setHorizontalAlignment(SwingConstants.CENTER);
-		passwordTextField.setBounds(78, 302, 244, 39);
-		contentPane.add(passwordTextField);
-		passwordTextField.setColumns(10);
+//		passwordTextField = new HintTextField("비밀번호 입력");
+//		passwordTextField.setHorizontalAlignment(SwingConstants.CENTER);
+//		passwordTextField.setBounds(78, 302, 244, 39);
+//		contentPane.add(passwordTextField);
+//		passwordTextField.setColumns(10);
 
 		logoPanel = new ImagePanel(mainLogoIcon.getImage());
 		logoPanel.setBounds(150, 100, 100, 100);
