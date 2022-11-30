@@ -7,16 +7,18 @@ import javax.swing.ImageIcon;
 
 class ChatMsg implements Serializable {
 	private static final long serialVersionUID = 1L;
-	public String code; // 100:로그인, 400:로그아웃, 200:채팅메시지, 300:Image, 500: Mouse Event
+	public String code;
 	public String userId;
 	public String data;
+	public int roomId; // 0 = Server 1,2,3... = roomId
 	public ImageIcon img;
 	public MouseEvent mouse_e;
-	public int pen_size; // pen size
+	public int pen_size;
 
-	public ChatMsg(String userId, String code, String msg) {
+	public ChatMsg(String userId, String code, String msg, int roomId) {
 		this.code = code;
 		this.userId = userId;
 		this.data = msg;
+		this.roomId = roomId;
 	}
 }

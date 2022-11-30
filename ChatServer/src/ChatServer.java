@@ -1,10 +1,6 @@
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -12,6 +8,7 @@ import java.util.Vector;
 
 public class ChatServer extends Thread {
 
+	private int room_id = 1;
 	private static ServerSocket socket; // 서버소켓
 	private Socket client_socket; // accept() 에서 생성된 client 소켓
 	private Vector<UserService> userVec = new Vector(); // 연결된 사용자를 저장할 벡터
@@ -49,10 +46,6 @@ public class ChatServer extends Thread {
 	}
 
 	public class UserService extends Thread {
-		private InputStream is;
-		private OutputStream os;
-		private DataInputStream dis;
-		private DataOutputStream dos;
 
 		private ObjectInputStream ois;
 		private ObjectOutputStream oos;
@@ -78,12 +71,37 @@ public class ChatServer extends Thread {
 
 			String userlist = MakeUserList();
 			String roomlist = MakeRoomList();
-			WriteAllObject(userlist);
-			WriteAllObject(roomlist);
+			WriteAll("100", userlist, 0);
+			WriteAll("100", roomlist, 0);
 		}
 
 		public void Logout() {
 			userVec.removeElement(this); // Logout한 현재 객체를 벡터에서 지운다
+			WriteAll("404", userId, 0);
+		}
+
+		public void EstablishRoom(String members) {
+			Vector<UserService> uv = new Vector<UserService>();
+			String[] memberList = members.split(" ");
+			for (int i = 1; i < memberList.length; i++) {
+				for (int j = 0; j < userVec.size(); j++) {
+					if (userVec.get(j).userId.equals(memberList[i])) {
+						uv.add(userVec.get(j));
+						userVec.get(j).WriteOne("301", Integer.toString(room_id) + " " + members, 0);
+					}
+				}
+			}
+			ChatRoom room = new ChatRoom(room_id, uv);
+			roomVec.add(room);
+			WriteOne("300", Integer.toString(room_id) + " " + members, 0);
+		}
+
+		public void HandleChat(String msg, int room_id) {
+			for (int i = 0; i < roomVec.size(); i++) {
+				if (roomVec.get(i).getRoomId() == room_id) {
+
+				}
+			}
 		}
 
 		public void WriteOneObject(Object ob) {
@@ -98,7 +116,6 @@ public class ChatServer extends Thread {
 					ois = null;
 					oos = null;
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 				Logout();
@@ -109,6 +126,32 @@ public class ChatServer extends Thread {
 			for (int i = 0; i < userVec.size(); i++) {
 				UserService user = userVec.elementAt(i);
 				user.WriteOneObject(ob);
+			}
+		}
+
+		public void WriteOne(String code, String msg, int room_id) {
+			try {
+				ChatMsg obcm = new ChatMsg("SERVER", code, msg, room_id);
+				oos.writeObject(obcm);
+			} catch (IOException e) {
+				try {
+					ois.close();
+					oos.close();
+					client_socket.close();
+					client_socket = null;
+					ois = null;
+					oos = null;
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				Logout();
+			}
+		}
+
+		public void WriteAll(String code, String str, int room_id) {
+			for (int i = 0; i < userVec.size(); i++) {
+				UserService user = userVec.elementAt(i);
+				user.WriteOne(code, str, room_id);
 			}
 		}
 
@@ -126,7 +169,7 @@ public class ChatServer extends Thread {
 			StringBuilder temp = new StringBuilder();
 			for (int i = 0; i < roomVec.size(); i++) {
 				ChatRoom room = roomVec.elementAt(i);
-				temp.append(room.roomId + " ");
+				temp.append(room.getRoomId() + " ");
 			}
 			temp.append("roomlist");
 			return temp.toString();
@@ -161,7 +204,6 @@ public class ChatServer extends Thread {
 					try {
 						obcm = ois.readObject();
 					} catch (ClassNotFoundException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 						return;
 					}
@@ -174,6 +216,13 @@ public class ChatServer extends Thread {
 					if (cm.code.matches("100")) {
 						Login(cm.userId);
 						System.out.println(cm.userId + " " + cm.data);
+					} else if (cm.code.matches("200")) {
+						System.out.println(cm.userId + " " + cm.data);
+						HandleChat(cm.data, cm.roomId);
+					} else if (cm.code.matches("300")) {
+						EstablishRoom(cm.data);
+					} else if (cm.code.matches("404")) {
+						Logout();
 					}
 				} catch (IOException e) {
 

@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
-		<item key="selection" value="Socket"/>
+		<item key="selection" value="room"/>
 		<item key="wrap" value="false"/>
 		<item key="casesensitive" value="false"/>
 		<item key="wholeword" value="false"/>
 		<item key="incremental" value="false"/>
 		<item key="isRegEx" value="false"/>
 		<list key="findhistory">
+			<item value="room"/>
+			<item value="400"/>
+			<item value="windowlisten"/>
+			<item value="myaction"/>
+			<item value="list"/>
+			<item value="WriteOne"/>
 			<item value="socket"/>
 			<item value="300"/>
 			<item value="txtInput"/>
@@ -17,14 +23,9 @@
 			<item value="Listento"/>
 			<item value="Listen"/>
 			<item value="ListenNetwork"/>
-			<item value="code"/>
-			<item value="data"/>
-			<item value="sendObject"/>
-			<item value="establish"/>
-			<item value="game"/>
-			<item value="gamec"/>
 		</list>
 		<list key="replacehistory">
+			<item value="msg"/>
 		</list>
 	</section>
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
