@@ -14,6 +14,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -38,6 +39,7 @@ public class ChatClientView extends JFrame {
 
 	private List<String> userList = new ArrayList<String>();
 	private List<String> roomList = new ArrayList<String>();
+	private Vector<ChatClientInChat> chatViewVec = new Vector<ChatClientInChat>();
 
 	private ImageIcon friendListIcon = new ImageIcon("./friendList_icon.png");
 	private ImageIcon roomListIcon = new ImageIcon("./roomList_icon.png");
@@ -80,7 +82,7 @@ public class ChatClientView extends JFrame {
 			oos.flush();
 			ois = new ObjectInputStream(socket.getInputStream());
 
-			ChatMsg obcm = new ChatMsg(userId, "100", "Login", 0);
+			ControlMsg obcm = new ControlMsg(userId, "100", "Login");
 			SendObject(obcm);
 		} catch (NumberFormatException | IOException e) {
 			// TODO Auto-generated catch block
@@ -169,7 +171,7 @@ public class ChatClientView extends JFrame {
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				ChatMsg obcm = new ChatMsg(userId, "404", "Logout", 0);
+				ControlMsg obcm = new ControlMsg(userId, "404", "Logout");
 				SendObject(obcm);
 			}
 		});
@@ -209,6 +211,7 @@ public class ChatClientView extends JFrame {
 					// obcm 그대로 사용시 cm.data 내용 출력됨
 					Object obcm = null;
 					ChatMsg cm;
+					ControlMsg conm;
 					String[] msg;
 					try {
 						obcm = ois.readObject();
@@ -219,62 +222,61 @@ public class ChatClientView extends JFrame {
 					}
 					if (obcm == null)
 						break;
-					if (obcm instanceof ChatMsg) {
+					if (obcm instanceof ControlMsg) {
+						conm = (ControlMsg) obcm;
+						switch (conm.code) {
+						case "100":
+
+							msg = conm.data.split(" ");
+
+							if (msg[msg.length - 1].equals("userlist")) {
+								for (int i = 0; i < msg.length - 1; i++) {
+									if (!userList.contains(msg[i]) && !msg[i].equals(userId)) {
+										userList.add(msg[i]);
+									}
+								}
+								setFriendMainPanel();
+							} else if (msg[msg.length - 1].equals("roomlist")) {
+								for (int i = 0; i < msg.length - 1; i++) {
+									if (!roomList.contains(msg[i])) {
+										roomList.add(msg[i]);
+									}
+								}
+								setRoomMainPanel();
+							}
+							break;
+						case "300":
+							// msg = roomid mem1 mem2 ...
+							roomList.add(conm.data);
+							setRoomMainPanel();
+							break;
+						case "400":
+							break;
+						case "404":
+							userList.remove(userList.indexOf(conm.data));
+							setFriendMainPanel();
+							break;
+						}
+					} else if (obcm instanceof ChatMsg) {
 						cm = (ChatMsg) obcm;
+						switch (cm.code) {
+						case "200":
+							for (int i = 0; i < chatViewVec.size(); i++) {
+								if (chatViewVec.get(i).getRoomId() == cm.roomId && !userId.equals(cm.userId)) {
+									chatViewVec.get(i).AppendText(cm.data);
+								}
+							}
+							break;
+						case "500":
+							for (int i = 0; i < chatViewVec.size(); i++) {
+								if (chatViewVec.get(i).getRoomId() == cm.roomId && !userId.equals(cm.userId)) {
+									chatViewVec.get(i).DoMouseEvent(cm);
+								}
+							}
+							break;
+						}
 					} else
 						continue;
-
-					switch (cm.code) {
-					case "100":
-
-						msg = cm.data.split(" ");
-
-						if (msg[msg.length - 1].equals("userlist")) {
-							for (int i = 0; i < msg.length - 1; i++) {
-								if (!userList.contains(msg[i]) && !msg[i].equals(userId)) {
-									userList.add(msg[i]);
-								}
-							}
-							setFriendMainPanel();
-						} else if (msg[msg.length - 1].equals("roomlist")) {
-							for (int i = 0; i < msg.length - 1; i++) {
-								if (!roomList.contains(msg[i])) {
-									roomList.add(msg[i]);
-								}
-							}
-							setRoomMainPanel();
-						}
-						break;
-					case "200":
-						break;
-					case "300":
-						// msg = roomid mem1 mem2 ...
-						roomList.add(cm.data);
-						setRoomMainPanel();
-
-						msg = cm.data.split(" ");
-
-						ChatClientInChat view = new ChatClientInChat(userId, ois, oos, Integer.parseInt(msg[0]));
-
-						view.addWindowListener(new WindowAdapter() {
-
-							@Override
-							public void windowClosing(WindowEvent e) {
-								setVisible(true);
-							}
-
-						});
-						setVisible(false);
-						break;
-					case "301":
-						roomList.add(cm.data);
-						setRoomMainPanel();
-						break;
-					case "404":
-						userList.remove(userList.indexOf(cm.data));
-						setFriendMainPanel();
-						break;
-					}
 
 				} catch (IOException e) {
 					try {
@@ -296,7 +298,7 @@ public class ChatClientView extends JFrame {
 	// Server에게 network으로 전송
 	public void SendMessage(String code, String msg) {
 		try {
-			ChatMsg obcm = new ChatMsg(userId, code, msg, 0);
+			ControlMsg obcm = new ControlMsg(userId, code, msg);
 			oos.writeObject(obcm);
 		} catch (IOException e) {
 			try {
@@ -347,16 +349,27 @@ public class ChatClientView extends JFrame {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					String[] msg = item.getText().split(" ");
-					ChatClientInChat view = new ChatClientInChat(userId, ois, oos, Integer.parseInt(msg[0]));
+					ChatClientInChat view = new ChatClientInChat(userId, oos, Integer.parseInt(msg[0]));
 
 					view.addWindowListener(new WindowAdapter() {
 
 						@Override
 						public void windowClosing(WindowEvent e) {
+							SendMessage("400", msg[0]);
 							setVisible(true);
 						}
 
 					});
+					view.addComponentListener(new ComponentAdapter() {
+
+						@Override
+						public void componentHidden(ComponentEvent e) {
+							SendMessage("400", msg[0]);
+							setVisible(true);
+						}
+
+					});
+					chatViewVec.add(view);
 					setVisible(false);
 				}
 

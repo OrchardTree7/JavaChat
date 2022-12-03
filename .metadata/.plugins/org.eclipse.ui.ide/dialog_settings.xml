@@ -8,9 +8,11 @@
 		<item key="WizardProjectsImportPage.STORE_COPY_PROJECT_ID" value="false"/>
 		<list key="WizardProjectsImportPage.STORE_DIRECTORIES">
 			<item value="/home/sunwonga/code/eclipse-projects/NetP10-java-game"/>
+			<item value="/home/sunwonga/code/eclipse-projects/JavaChat"/>
 			<item value=""/>
 		</list>
 		<list key="WizardProjectsImportPage.STORE_ARCHIVES">
+			<item value=""/>
 			<item value="/home/sunwonga/다운로드/NetP09-java2.zip"/>
 			<item value="/home/sunwonga/다운로드/NetP10-java-game.zip"/>
 			<item value="/home/sunwonga/다운로드/NetP07-java.zip"/>

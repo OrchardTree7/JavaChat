@@ -1,10 +1,17 @@
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import javax.swing.ImageIcon;
@@ -15,6 +22,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
@@ -25,18 +33,22 @@ public class ChatClientInChat extends JFrame {
 	private int roomId;
 	private String userId;
 
-	private ObjectInputStream ois;
 	private ObjectOutputStream oos;
 
 	private JPanel contentPane;
 	private JTextField txtInput;
-	private JButton btnSend;
 	private JTextPane textArea;
 
-	public ChatClientInChat(String userId, ObjectInputStream ois, ObjectOutputStream oos, int roomId) {
+	JPanel drawingPanel;
+	private Graphics gc;
+	private int pen_size = 2; // minimum 2
+	// 그려진 Image를 보관하는 용도, paint() 함수에서 이용한다.
+	private Image panelImage = null;
+	private Graphics gc2 = null;
+
+	public ChatClientInChat(String userId, ObjectOutputStream oos, int roomId) {
 		this.roomId = roomId;
 		this.userId = userId;
-		this.ois = ois;
 		this.oos = oos;
 		initialize();
 	}
@@ -47,14 +59,14 @@ public class ChatClientInChat extends JFrame {
 	private void initialize() {
 		setResizable(false);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setBounds(100, 100, 392, 634);
+		setBounds(100, 100, 705, 611);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 
 		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(12, 10, 352, 471);
+		scrollPane.setBounds(12, 12, 193, 469);
 		contentPane.add(scrollPane);
 
 		textArea = new JTextPane();
@@ -63,27 +75,14 @@ public class ChatClientInChat extends JFrame {
 		scrollPane.setViewportView(textArea);
 
 		txtInput = new JTextField();
-		txtInput.setBounds(74, 489, 209, 40);
+		txtInput.setBounds(12, 485, 193, 40);
 		contentPane.add(txtInput);
 		txtInput.setColumns(10);
-
-		btnSend = new JButton("Send");
-		btnSend.setFont(new Font("굴림", Font.PLAIN, 14));
-		btnSend.setBounds(295, 489, 69, 40);
-		btnSend.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				AppendTextR(userId + ":" + txtInput.getText());
-				SendMessage("200", roomId + " " + txtInput.getText());
-			}
-
-		});
-		contentPane.add(btnSend);
+		txtInput.addActionListener(new SendAction());
 
 		JButton btnExit = new JButton("종 료");
 		btnExit.setFont(new Font("굴림", Font.PLAIN, 14));
-		btnExit.setBounds(295, 539, 69, 40);
+		btnExit.setBounds(12, 530, 69, 40);
 		btnExit.addActionListener(new ActionListener() {
 
 			@Override
@@ -95,7 +94,44 @@ public class ChatClientInChat extends JFrame {
 		});
 		contentPane.add(btnExit);
 
+		drawingPanel = new JPanel();
+		drawingPanel.setBorder(new LineBorder(new Color(0, 0, 0)));
+		drawingPanel.setBackground(Color.WHITE);
+		drawingPanel.setBounds(217, 12, 474, 565);
+		contentPane.add(drawingPanel);
+
+		MyMouseEvent mouse = new MyMouseEvent();
+		drawingPanel.addMouseMotionListener(mouse);
+		drawingPanel.addMouseListener(mouse);
+		MyMouseWheelEvent wheel = new MyMouseWheelEvent();
+		drawingPanel.addMouseWheelListener(wheel);
+
+		addWindowListener(new WindowAdapter() {
+
+			@Override
+			public void windowOpened(WindowEvent e) {
+				gc = drawingPanel.getGraphics();
+				panelImage = createImage(drawingPanel.getWidth(), drawingPanel.getHeight());
+				gc2 = panelImage.getGraphics();
+				gc2.setColor(drawingPanel.getBackground());
+				gc2.fillRect(0, 0, drawingPanel.getWidth(), drawingPanel.getHeight());
+				gc2.setColor(Color.BLACK);
+				gc2.drawRect(0, 0, drawingPanel.getWidth() - 1, drawingPanel.getHeight() - 1);
+			}
+		});
+
 		setVisible(true);
+
+	}
+
+	public class SendAction implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			AppendTextR(txtInput.getText());
+			SendChat("200", txtInput.getText());
+			txtInput.setText("");
+		}
 
 	}
 
@@ -171,10 +207,9 @@ public class ChatClientInChat extends JFrame {
 
 	}
 
-	// Server에게 network으로 전송
-	public void SendMessage(String code, String msg) {
+	public void SendChat(String code, String msg) {
 		try {
-			ChatMsg obcm = new ChatMsg(userId, code, msg, roomId);
+			ChatMsg obcm = new ChatMsg(userId, code, msg, getRoomId());
 			oos.writeObject(obcm);
 		} catch (IOException e1) {
 
@@ -187,8 +222,88 @@ public class ChatClientInChat extends JFrame {
 		try {
 			oos.writeObject(ob);
 		} catch (IOException e) {
-			// textArea.append("메세지 송신 에러!!\n");
 		}
 	}
 
+	// Mouse Event 수신 처리
+	public void DoMouseEvent(ChatMsg cm) {
+		Color c;
+		if (cm.userId.matches(userId)) // 본인 것은 이미 Local 로 그렸다.
+			return;
+		c = new Color(255, 0, 0); // 다른 사람 것은 Red
+		gc2.setColor(c);
+		gc2.fillOval(cm.mouse_e.getX() - pen_size / 2, cm.mouse_e.getY() - cm.pen_size / 2, cm.pen_size, cm.pen_size);
+		gc.drawImage(panelImage, 0, 0, drawingPanel);
+	}
+
+	public void SendMouseEvent(MouseEvent e) {
+		ChatMsg cm = new ChatMsg(userId, "500", "MOUSE", roomId);
+		cm.mouse_e = e;
+		cm.pen_size = pen_size;
+		SendObject(cm);
+	}
+
+	class MyMouseWheelEvent implements MouseWheelListener {
+		@Override
+		public void mouseWheelMoved(MouseWheelEvent e) {
+			// TODO Auto-generated method stub
+			if (e.getWheelRotation() < 0) { // 위로 올리는 경우 pen_size 증가
+				if (pen_size < 20)
+					pen_size++;
+			} else {
+				if (pen_size > 2)
+					pen_size--;
+			}
+		}
+	}
+
+	// Mouse Event Handler
+	class MyMouseEvent implements MouseListener, MouseMotionListener {
+		@Override
+		public void mouseDragged(MouseEvent e) {
+			Color c = new Color(0, 0, 255);
+			gc2.setColor(c);
+			gc2.fillOval(e.getX() - pen_size / 2, e.getY() - pen_size / 2, pen_size, pen_size);
+			// panelImnage는 paint()에서 이용한다.
+			gc.drawImage(panelImage, 0, 0, drawingPanel);
+			SendMouseEvent(e);
+		}
+
+		@Override
+		public void mouseMoved(MouseEvent e) {
+
+		}
+
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			Color c = new Color(0, 0, 255);
+			gc2.setColor(c);
+			gc2.fillOval(e.getX() - pen_size / 2, e.getY() - pen_size / 2, pen_size, pen_size);
+			gc.drawImage(panelImage, 0, 0, drawingPanel);
+			SendMouseEvent(e);
+		}
+
+		@Override
+		public void mouseEntered(MouseEvent e) {
+		}
+
+		@Override
+		public void mouseExited(MouseEvent e) {
+
+		}
+
+		@Override
+		public void mousePressed(MouseEvent e) {
+
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent e) {
+
+		}
+	}
+
+	public int getRoomId() {
+		return roomId;
+	}
 }

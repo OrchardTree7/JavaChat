@@ -27,4 +27,5 @@
     <fullyQualifiedTypeName name="java.awt.event.ActionListener"/>
     <fullyQualifiedTypeName name="java.awt.event.WindowListener"/>
     <fullyQualifiedTypeName name="ChatServer.UserService"/>
+    <fullyQualifiedTypeName name="java.awt.event.ComponentListener"/>
 </qualifiedTypeNameHistroy>

@@ -1,5 +1,4 @@
 
-// ChatMsg.java 채팅 메시지 ObjectStream 용.
 import java.awt.event.MouseEvent;
 import java.io.Serializable;
 
@@ -7,10 +6,10 @@ import javax.swing.ImageIcon;
 
 class ChatMsg implements Serializable {
 	private static final long serialVersionUID = 1L;
+	public int roomId;
 	public String code;
 	public String userId;
 	public String data;
-	public int roomId; // 0 = Server 1,2,3... = roomId
 	public ImageIcon img;
 	public MouseEvent mouse_e;
 	public int pen_size;
