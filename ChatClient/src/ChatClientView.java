@@ -275,13 +275,16 @@ public class ChatClientView extends JFrame {
 							chatView.AppendNotice(conm.data + "님이 입장하셨습니다.");
 							break;
 						case "304":
+							msg = conm.data.split(",");
 							for (int i = 0; i < roomList.size(); i++) {
-								if (roomList.get(i).equals(conm.data)) {
+								if (roomList.get(i).equals(msg[0])) {
 									roomList.remove(i);
 									break;
 								}
 							}
-							chatView.AppendNotice(conm.data + "님이 퇴장하셨습니다.");
+							if (msg.length == 1) {
+								chatView.AppendNotice(conm.data + "님이 퇴장하셨습니다.");
+							}
 							setRoomMainPanel();
 							break;
 						case "400":

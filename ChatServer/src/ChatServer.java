@@ -229,7 +229,7 @@ public class ChatServer extends Thread {
 							}
 							room.handleExit(conm.userId);
 							if (room.getUserVec().size() == 0) {
-								WriteAll("304", room.getRoomId());
+								WriteAll("304", room.getRoomId() + ",roomId");
 								roomVec.remove(room);
 							}
 						} else if (conm.code.matches("400")) {
