@@ -1,36 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
-		<item key="selection" value="500"/>
+		<item key="selection" value="close"/>
 		<item key="wrap" value="false"/>
 		<item key="casesensitive" value="false"/>
 		<item key="wholeword" value="false"/>
 		<item key="incremental" value="false"/>
 		<item key="isRegEx" value="false"/>
 		<list key="findhistory">
-			<item value="500"/>
-			<item value="btn"/>
-			<item value="control"/>
-			<item value="room"/>
-			<item value="400"/>
-			<item value="windowlisten"/>
-			<item value="myaction"/>
-			<item value="list"/>
-			<item value="WriteOne"/>
-			<item value="socket"/>
+			<item value="close"/>
+			<item value="System.out.println(userId + &quot; &quot; + code + &quot; &quot; + msg + &quot;error 2&quot;);"/>
+			<item value="System.out.println(&quot;error 1&quot;);"/>
+			<item value="Turn"/>
+			<item value="turn"/>
+			<item value="enable"/>
 			<item value="300"/>
-			<item value="txtInput"/>
-			<item value="enter"/>
-			<item value="listennet"/>
-			<item value="listen"/>
+			<item value="imgBtn"/>
+			<item value="btnSelected"/>
+			<item value="202"/>
+			<item value="201"/>
+			<item value="userVec"/>
+			<item value="400"/>
+			<item value="304"/>
+			<item value="404"/>
 		</list>
 		<list key="replacehistory">
+			<item value=""/>
+			<item value="btnDraw"/>
+			<item value="roomUserVec"/>
 			<item value="msg"/>
 		</list>
 	</section>
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
-		<item key="DIALOG_X_ORIGIN" value="794"/>
-		<item key="DIALOG_Y_ORIGIN" value="231"/>
+		<item key="DIALOG_X_ORIGIN" value="1063"/>
+		<item key="DIALOG_Y_ORIGIN" value="150"/>
 		<item key="DIALOG_WIDTH" value="338"/>
 		<item key="DIALOG_HEIGHT" value="430"/>
 		<item key="DIALOG_FONT_NAME" value="1|Ubuntu|10.0|0|GTK|1|"/>

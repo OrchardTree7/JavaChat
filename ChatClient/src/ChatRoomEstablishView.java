@@ -1,38 +1,26 @@
-import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.List;
 
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
+import javax.swing.JRadioButton;
+import javax.swing.JTextField;
 
 public class ChatRoomEstablishView extends JFrame {
 
 	private JPanel contentPane;
+	private JButton establishBtn;
+	public JTextField textField;
+	public JRadioButton rdbtnNewRadioButton;
+	public JRadioButton rdbtnNewRadioButton_1;
+	public JRadioButton rdbtnNewRadioButton_2;
+	public ButtonGroup group;
 
-	private JScrollPane mainScrollPane;
-	private JPanel friendPanel;
-	private JPanel friendListHeading;
-	private JLabel friendListLabel;
-	private JPanel friendMainPanel;
-	private JButton btnEstablish;
-
-	private ImageIcon basicProfileIcon = new ImageIcon("./basicProfile_icon.png");
-
-	private List<String> userList = new ArrayList<String>();
-	private List<String> roomMembers = new ArrayList<String>();
-
-	public ChatRoomEstablishView(List<String> userList) {
-		this.userList = userList;
+	public ChatRoomEstablishView() {
 		initialize();
 	}
 
@@ -42,75 +30,71 @@ public class ChatRoomEstablishView extends JFrame {
 	private void initialize() {
 		setResizable(false);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setBounds(0, 0, 300, 500);
+		setBounds(100, 100, 300, 100);
 		contentPane = new JPanel();
 		contentPane.setBackground(new Color(222, 221, 218));
 		contentPane.setBorder(null);
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 
-		mainScrollPane = new JScrollPane();
-		mainScrollPane.setBounds(0, 0, 298, 473);
-		contentPane.add(mainScrollPane);
+		textField = new JTextField();
+		textField.setBounds(56, 12, 159, 22);
+		contentPane.add(textField);
+		textField.setColumns(10);
+		textField.addActionListener(new EstablishAction());
 
-		friendPanel = new JPanel();
-		mainScrollPane.setViewportView(friendPanel);
-		friendPanel.setLayout(new BorderLayout(0, 0));
+		establishBtn = new JButton("생성");
+		establishBtn.setBounds(227, 23, 59, 28);
+		contentPane.add(establishBtn);
+		establishBtn.addActionListener(new EstablishAction());
 
-		friendListHeading = new JPanel();
-		FlowLayout flowLayout = (FlowLayout) friendListHeading.getLayout();
-		flowLayout.setAlignment(FlowLayout.LEADING);
-		friendPanel.add(friendListHeading, BorderLayout.NORTH);
+		JLabel lblNewLabel = new JLabel("방 이름");
+		lblNewLabel.setBounds(12, 14, 43, 18);
+		contentPane.add(lblNewLabel);
 
-		friendListLabel = new JLabel("친구");
-		friendListLabel.setFont(new Font("Dialog", Font.BOLD, 20));
-		friendListHeading.add(friendListLabel);
+		JLabel lblNewLabel_1 = new JLabel("라운드 수");
+		lblNewLabel_1.setBounds(12, 41, 53, 18);
+		contentPane.add(lblNewLabel_1);
 
-		friendMainPanel = new JPanel();
-		friendPanel.add(friendMainPanel, BorderLayout.CENTER);
-		friendMainPanel.setLayout(new BoxLayout(friendMainPanel, BoxLayout.Y_AXIS));
+		rdbtnNewRadioButton = new JRadioButton("3");
+		rdbtnNewRadioButton.setBounds(66, 37, 43, 26);
+		contentPane.add(rdbtnNewRadioButton);
 
-		for (int i = 0; i < userList.size(); i++) {
-			JButton item = new JButton(basicProfileIcon);
-			item.setText(userList.get(i));
-			item.setBorderPainted(false);
-			item.setContentAreaFilled(false);
-			item.setFocusPainted(false);
-			item.addActionListener(new ActionListener() {
+		rdbtnNewRadioButton_1 = new JRadioButton("5");
+		rdbtnNewRadioButton_1.setSelected(true);
+		rdbtnNewRadioButton_1.setBounds(113, 37, 43, 26);
+		contentPane.add(rdbtnNewRadioButton_1);
 
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					String userId = item.getText().split(" ")[0];
-					if (!roomMembers.contains(userId)) {
-						roomMembers.add(userId);
-						item.setText(userId + " (선택됨)");
-					} else {
-						roomMembers.remove(roomMembers.indexOf(userId));
-						item.setText(userId);
-					}
+		rdbtnNewRadioButton_2 = new JRadioButton("7");
+		rdbtnNewRadioButton_2.setBounds(159, 37, 43, 26);
+		contentPane.add(rdbtnNewRadioButton_2);
 
-				}
-
-			});
-			friendMainPanel.add(item);
-		}
-
-		btnEstablish = new JButton("방 만들기");
-		btnEstablish.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				setVisible(false);
-			}
-
-		});
-		friendMainPanel.add(btnEstablish);
+		group = new ButtonGroup();
+		group.add(rdbtnNewRadioButton);
+		group.add(rdbtnNewRadioButton_1);
+		group.add(rdbtnNewRadioButton_2);
 
 		setVisible(true);
 	}
 
-	public List<String> getRoomMembers() {
-		return roomMembers;
+	public String getRound() {
+		if (rdbtnNewRadioButton.isSelected()) {
+			return "3";
+		} else if (rdbtnNewRadioButton_2.isSelected()) {
+			return "7";
+		} else {
+			return "5";
+		}
 	}
 
+	class EstablishAction implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (!textField.getText().isBlank()) {
+				setVisible(false);
+			}
+		}
+
+	}
 }

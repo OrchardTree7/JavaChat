@@ -14,7 +14,6 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -39,7 +38,7 @@ public class ChatClientView extends JFrame {
 
 	private List<String> userList = new ArrayList<String>();
 	private List<String> roomList = new ArrayList<String>();
-	private Vector<ChatClientInChat> chatViewVec = new Vector<ChatClientInChat>();
+	private ChatClientInChat chatView;
 
 	private ImageIcon friendListIcon = new ImageIcon("./friendList_icon.png");
 	private ImageIcon roomListIcon = new ImageIcon("./roomList_icon.png");
@@ -60,7 +59,7 @@ public class ChatClientView extends JFrame {
 	private JPanel roomPanel = new JPanel();
 
 	private JPanel contentPane;
-	private JLabel friendListLabel = new JLabel("친구");
+	private JLabel friendListLabel = new JLabel("유저 목록");
 	private JLabel roomListLabel = new JLabel("방 목록");
 	private JPanel friendListHeading = new JPanel();
 	private JPanel roomListHeading = new JPanel();
@@ -71,6 +70,7 @@ public class ChatClientView extends JFrame {
 	 * Create the application.
 	 */
 	public ChatClientView(String user_id, String ip_addr, String port_no) {
+		setTitle("캐치마인드");
 		userId = user_id;
 		ipAddr = ip_addr;
 		port = Integer.parseInt(port_no);
@@ -147,33 +147,43 @@ public class ChatClientView extends JFrame {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				ChatRoomEstablishView view = new ChatRoomEstablishView(userList);
+				ChatRoomEstablishView view = new ChatRoomEstablishView();
 				view.addComponentListener(new ComponentAdapter() {
 					@Override
 					public void componentHidden(ComponentEvent e) {
-						List<String> roomMembers = view.getRoomMembers();
-						if (roomMembers.size() == 0) {
-							return;
-						}
-						StringBuilder msg = new StringBuilder();
-						msg.append(userId + " ");
-						for (int i = 0; i < roomMembers.size(); i++) {
-							msg.append(roomMembers.get(i) + " ");
-						}
-						msg.trimToSize();
-						SendMessage("300", msg.toString());
+						String roomId = view.textField.getText();
+						String turn = view.getRound();
+
+						SendMessage("300", roomId + "," + turn);
+						ChatClientInChat view = new ChatClientInChat(userId, oos, roomId, true);
+						SendMessage("303", roomId);
+
+						view.addWindowListener(new WindowAdapter() {
+
+							@Override
+							public void windowClosing(WindowEvent e) {
+								SendMessage("304", roomId);
+								setVisible(true);
+							}
+
+						});
+						view.addComponentListener(new ComponentAdapter() {
+
+							@Override
+							public void componentHidden(ComponentEvent e) {
+								SendMessage("304", roomId);
+								setVisible(true);
+							}
+
+						});
+						view.setMaster(true);
+						view.setCurrUser(userId);
+						chatView = view;
+						setVisible(false);
 					}
 				});
 			}
 
-		});
-
-		addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosing(WindowEvent e) {
-				ControlMsg obcm = new ControlMsg(userId, "404", "Logout");
-				SendObject(obcm);
-			}
 		});
 
 		mainScrollPane.setViewportView(friendPanel);
@@ -197,6 +207,14 @@ public class ChatClientView extends JFrame {
 
 		friendPanel.add(friendListHeading, BorderLayout.NORTH);
 		roomPanel.add(roomListHeading, BorderLayout.NORTH);
+
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				ControlMsg obcm = new ControlMsg(userId, "400", "Logout");
+				SendObject(obcm);
+			}
+		});
 
 		setVisible(true);
 
@@ -246,13 +264,27 @@ public class ChatClientView extends JFrame {
 							}
 							break;
 						case "300":
-							// msg = roomid mem1 mem2 ...
 							roomList.add(conm.data);
 							setRoomMainPanel();
 							break;
-						case "400":
+						case "301":
 							break;
-						case "404":
+						case "302":
+							break;
+						case "303":
+							chatView.AppendNotice(conm.data + "님이 입장하셨습니다.");
+							break;
+						case "304":
+							for (int i = 0; i < roomList.size(); i++) {
+								if (roomList.get(i).equals(conm.data)) {
+									roomList.remove(i);
+									break;
+								}
+							}
+							chatView.AppendNotice(conm.data + "님이 퇴장하셨습니다.");
+							setRoomMainPanel();
+							break;
+						case "400":
 							userList.remove(userList.indexOf(conm.data));
 							setFriendMainPanel();
 							break;
@@ -261,18 +293,68 @@ public class ChatClientView extends JFrame {
 						cm = (ChatMsg) obcm;
 						switch (cm.code) {
 						case "200":
-							for (int i = 0; i < chatViewVec.size(); i++) {
-								if (chatViewVec.get(i).getRoomId() == cm.roomId && !userId.equals(cm.userId)) {
-									chatViewVec.get(i).AppendText(cm.data);
-								}
+							if (!userId.equals(cm.userId)) {
+								chatView.AppendText(cm.data);
 							}
 							break;
-						case "500":
-							for (int i = 0; i < chatViewVec.size(); i++) {
-								if (chatViewVec.get(i).getRoomId() == cm.roomId && !userId.equals(cm.userId)) {
-									chatViewVec.get(i).DoMouseEvent(cm);
-								}
+						case "201":
+							if (!userId.equals(cm.userId)) {
+								chatView.DoMouseEvent(cm);
 							}
+							break;
+						case "202":
+							if (userId.equals(cm.userId)) {
+								chatView.AppendImage(cm.img);
+							}
+							break;
+						case "203":
+							msg = cm.data.split(",");
+							if (msg[1].equals(userId)) {
+								chatView.setTurn(true);
+							} else {
+								chatView.setTurn(false);
+							}
+							chatView.AppendNotice("\n게임시작");
+							chatView.AppendNotice(msg[1] + "님의 차례입니다.\n");
+							chatView.clearDrawingPanel();
+							chatView.setWord(msg[0]);
+							chatView.setDrawingUser(msg[1]);
+							break;
+						case "204":
+							// 정답자 처리
+							if (userId.equals(cm.userId)) {
+								chatView.setScore(chatView.getScore() + 10);
+							}
+							msg = cm.data.split(",");
+							if (msg[1].equals(userId)) {
+								chatView.setTurn(true);
+							} else {
+								chatView.setTurn(false);
+							}
+							chatView.AppendNotice("\n" + msg[2] + " 라운드 종료");
+							chatView.AppendNotice("정답자:" + cm.userId + ", 제시어:" + chatView.getWord());
+							chatView.AppendNotice(msg[1] + "님의 차례입니다.\n");
+							chatView.clearDrawingPanel();
+							chatView.setWord(msg[0]);
+							chatView.setDrawingUser(msg[1]);
+							break;
+						case "205":
+							if (userId.equals(cm.userId)) {
+								chatView.setScore(chatView.getScore() + 10);
+							}
+							if (chatView.isMaster()) {
+								chatView.enableStartBtn(true);
+							}
+							if (cm.data.equals(userId)) {
+								chatView.setTurn(true);
+							} else {
+								chatView.setTurn(false);
+							}
+							chatView.AppendNotice("\n마지막 라운드 종료");
+							chatView.AppendNotice("정답자:" + cm.userId + ", 제시어:" + chatView.getWord() + "\n");
+							chatView.clearDrawingPanel();
+							chatView.setWord("");
+							chatView.setDrawingUser(cm.data);
 							break;
 						}
 					} else
@@ -280,6 +362,8 @@ public class ChatClientView extends JFrame {
 
 				} catch (IOException e) {
 					try {
+						e.printStackTrace();
+						System.out.println(userId + " error 1");
 						ois.close();
 						oos.close();
 						socket.close();
@@ -303,6 +387,8 @@ public class ChatClientView extends JFrame {
 		} catch (IOException e) {
 			try {
 
+				e.printStackTrace();
+				System.out.println(userId + " " + code + " " + msg + "error 2");
 				ois.close();
 				oos.close();
 				socket.close();
@@ -348,14 +434,15 @@ public class ChatClientView extends JFrame {
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					String[] msg = item.getText().split(" ");
-					ChatClientInChat view = new ChatClientInChat(userId, oos, Integer.parseInt(msg[0]));
+					String roomId = item.getText();
+					ChatClientInChat view = new ChatClientInChat(userId, oos, roomId);
+					SendMessage("303", roomId);
 
 					view.addWindowListener(new WindowAdapter() {
 
 						@Override
 						public void windowClosing(WindowEvent e) {
-							SendMessage("400", msg[0]);
+							SendMessage("304", roomId);
 							setVisible(true);
 						}
 
@@ -364,12 +451,13 @@ public class ChatClientView extends JFrame {
 
 						@Override
 						public void componentHidden(ComponentEvent e) {
-							SendMessage("400", msg[0]);
+							SendMessage("304", roomId);
 							setVisible(true);
 						}
 
 					});
-					chatViewVec.add(view);
+					chatView = view;
+					view.setCurrUser(userId);
 					setVisible(false);
 				}
 

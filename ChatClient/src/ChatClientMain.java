@@ -12,6 +12,7 @@ import java.awt.event.FocusEvent;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
@@ -52,7 +53,7 @@ public class ChatClientMain extends JFrame {
 	 * Create the application.
 	 */
 	public ChatClientMain() {
-		setBackground(new Color(247, 229, 0));
+		setBackground(new Color(30, 144, 255));
 		initialize();
 	}
 
@@ -63,14 +64,14 @@ public class ChatClientMain extends JFrame {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 400, 450);
 		contentPane = new JPanel();
-		contentPane.setBackground(new Color(247, 229, 0));
+		contentPane.setBackground(new Color(30, 144, 255));
 		contentPane.setBorder(null);
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 
 		userIDTextField = new HintTextField("아이디 입력");
 		userIDTextField.setHorizontalAlignment(SwingConstants.CENTER);
-		userIDTextField.setBounds(78, 252, 244, 39);
+		userIDTextField.setBounds(78, 300, 244, 39);
 		contentPane.add(userIDTextField);
 		userIDTextField.setColumns(10);
 
@@ -79,17 +80,19 @@ public class ChatClientMain extends JFrame {
 		btnConnect.setBounds(78, 352, 244, 39);
 		contentPane.add(btnConnect);
 
-//		passwordTextField = new HintTextField("비밀번호 입력");
-//		passwordTextField.setHorizontalAlignment(SwingConstants.CENTER);
-//		passwordTextField.setBounds(78, 302, 244, 39);
-//		contentPane.add(passwordTextField);
-//		passwordTextField.setColumns(10);
-
 		logoPanel = new ImagePanel(mainLogoIcon.getImage());
-		logoPanel.setBounds(150, 100, 100, 100);
+		logoPanel.setBounds(50, 0, 300, 300);
 		contentPane.add(logoPanel);
 
+		JLabel lblNewLabel = new JLabel("ID : ");
+		lblNewLabel.setForeground(new Color(255, 255, 255));
+		lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		lblNewLabel.setFont(new Font("Dialog", Font.BOLD, 16));
+		lblNewLabel.setBounds(20, 300, 59, 39);
+		contentPane.add(lblNewLabel);
+
 		Myaction action = new Myaction();
+		userIDTextField.addActionListener(action);
 		btnConnect.addActionListener(action);
 	}
 
@@ -97,6 +100,8 @@ public class ChatClientMain extends JFrame {
 	{
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			if (userIDTextField.getText().isBlank())
+				return;
 			String user_id = userIDTextField.getText().trim();
 			String ip_addr = localhost;
 			String port_no = port;

@@ -1,19 +1,20 @@
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Random;
 import java.util.Vector;
 
 public class ChatServer extends Thread {
 
-	private int room_id = 1;
+	private String[] words = new String[] { "아마겟돈", "뱅보드 차트", "개구리", "담배", "단소", "가극", "만리장성", "어린왕자", "바코드", "만남", "새",
+			"하늘", "나무", "말뚝", "목소리", "공장", "노래", "계곡", "폭포", "행성", "나비" };
+
 	private static ServerSocket socket; // 서버소켓
 	private Socket client_socket; // accept() 에서 생성된 client 소켓
 	private Vector<UserService> userVec = new Vector(); // 연결된 사용자를 저장할 벡터
 	private Vector<ChatRoom> roomVec = new Vector<ChatRoom>();
-	private static final int BUF_LEN = 128; // Windows 처럼 BUF_LEN 을 정의
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
@@ -72,50 +73,27 @@ public class ChatServer extends Thread {
 			String userlist = MakeUserList();
 			String roomlist = MakeRoomList();
 			WriteAll("100", userlist);
-			WriteAll("100", roomlist);
+			WriteOne("100", roomlist);
 		}
 
 		public void Logout() {
 			userVec.removeElement(this); // Logout한 현재 객체를 벡터에서 지운다
-			WriteAll("404", userId);
+			WriteAll("400", userId);
 		}
 
-		public void EstablishRoom(String members) {
-			Vector<UserService> uv = new Vector<UserService>();
-			String[] memberList = members.split(" ");
-			for (int i = 0; i < roomVec.size(); i++) {
-				uv = roomVec.get(i).getUserVec();
-				int flag = uv.size();
-				for (int j = 0; j < uv.size(); j++) {
-					for (int k = 0; k < memberList.length; k++) {
-						if (uv.get(j).userId.equals(memberList[k])) {
-							flag--;
-						}
-					}
-				}
-				if (flag == 0)
-					return;
-			}
-			uv.clear();
-			for (int i = 0; i < memberList.length; i++) {
-				for (int j = 0; j < userVec.size(); j++) {
-					if (userVec.get(j).userId.equals(memberList[i])) {
-						uv.add(userVec.get(j));
-						userVec.get(j).WriteOne("300", Integer.toString(room_id) + " " + members);
-					}
-				}
-			}
-			ChatRoom room = new ChatRoom(room_id++, uv);
+		public void EstablishRoom(String room_id, String master, String round) {
+			ChatRoom room = new ChatRoom(room_id, master, Integer.parseInt(round));
 			roomVec.add(room);
+			WriteAll("300", room_id);
 		}
 
-		public void ExitRoom(int room_id) {
-			Vector<UserService> uv = new Vector<UserService>();
+		public ChatRoom FindRoom(String room_id) {
 			for (int i = 0; i < roomVec.size(); i++) {
-				if (roomVec.get(i).getRoomId() == room_id) {
-
+				if (roomVec.get(i).getRoomId().equals(room_id)) {
+					return roomVec.get(i);
 				}
 			}
+			return null;
 		}
 
 		public void WriteOneObject(Object ob) {
@@ -169,7 +147,7 @@ public class ChatServer extends Thread {
 			}
 		}
 
-		public void WriteChat(String user_id, String code, String msg, int room_id) {
+		public void WriteChat(String user_id, String code, String msg, String room_id) {
 			try {
 				ChatMsg obcm = new ChatMsg(user_id, code, msg, room_id);
 				oos.writeObject(obcm);
@@ -208,29 +186,12 @@ public class ChatServer extends Thread {
 			return temp.toString();
 		}
 
-		public byte[] MakePacket(String msg) {
-			byte[] packet = new byte[BUF_LEN];
-			byte[] bb = null;
-			int i;
-			for (i = 0; i < BUF_LEN; i++)
-				packet[i] = 0;
-			try {
-				bb = msg.getBytes("euc-kr");
-			} catch (UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			for (i = 0; i < bb.length; i++)
-				packet[i] = bb[i];
-			return packet;
-		}
-
 		@Override
 		public void run() {
 			while (true) {
 				try {
 					Object obcm = null;
-					String msg = null;
+					String[] msg = null;
 					ChatMsg cm = null;
 					ControlMsg conm = null;
 					if (socket == null)
@@ -247,29 +208,59 @@ public class ChatServer extends Thread {
 						conm = (ControlMsg) obcm;
 						if (conm.code.matches("100")) {
 							Login(conm.userId);
-							System.out.println(conm.userId + " " + conm.data);
 						} else if (conm.code.matches("300")) {
-							EstablishRoom(conm.data);
-						} else if (conm.code.matches("400")) {
+							// 방 개설
+							msg = conm.data.split(",");
+							EstablishRoom(msg[0], conm.userId, msg[1]);
+						} else if (conm.code.matches("301")) {
+							// 방 삭제
 
-						} else if (conm.code.matches("404")) {
+						} else if (conm.code.matches("302")) {
+
+						} else if (conm.code.matches("303")) {
+							// 방 입장
+							ChatRoom room = FindRoom(conm.data);
+							room.handleEnter(conm.userId);
+						} else if (conm.code.matches("304")) {
+							// 방 퇴장
+							ChatRoom room = FindRoom(conm.data);
+							// 방장 퇴장시 처리
+							if (room.getMaster().equals(conm.userId)) {
+							}
+							room.handleExit(conm.userId);
+							if (room.getUserVec().size() == 0) {
+								WriteAll("304", room.getRoomId());
+								roomVec.remove(room);
+							}
+						} else if (conm.code.matches("400")) {
 							Logout();
 						}
 					} else if (obcm instanceof ChatMsg) {
 						cm = (ChatMsg) obcm;
 						if (cm.code.matches("200")) {
-							System.out.println(cm.userId + ":" + cm.data);
-							for (int i = 0; i < roomVec.size(); i++) {
-								if (roomVec.get(i).getRoomId() == cm.roomId) {
-									roomVec.get(i).handleChat(cm.userId, cm.data);
-								}
+							ChatRoom room = FindRoom(cm.roomId);
+							room.handleChat(cm.userId, cm.data);
+						} else if (cm.code.matches("203")) {
+							Random r = new Random();
+							String word = words[r.nextInt(words.length)];
+							ChatRoom room = FindRoom(cm.roomId);
+							String uid = room.getRoundUser();
+							room.handleStart(word + "," + uid);
+						} else if (cm.code.matches("204")) {
+							ChatRoom room = FindRoom(cm.roomId);
+							room.roundOver();
+							if (room.isGameOver()) {
+								String uid = room.getRoundUser();
+								room.handleOver(cm.userId, uid);
+							} else {
+								Random r = new Random();
+								String word = words[r.nextInt(words.length)];
+								String uid = room.getRoundUser();
+								room.handleEnd(cm.userId, word + "," + uid + "," + room.round);
 							}
 						} else {
-							for (int i = 0; i < roomVec.size(); i++) {
-								if (roomVec.get(i).getRoomId() == cm.roomId) {
-									roomVec.get(i).handleEtc(cm);
-								}
-							}
+							ChatRoom room = FindRoom(cm.roomId);
+							room.handleEtc(cm);
 						}
 					} else
 						continue;
@@ -283,50 +274,118 @@ public class ChatServer extends Thread {
 
 	public class ChatRoom {
 
-		private int roomId;
-		private Vector<UserService> userVec = new Vector<UserService>();
-		private static final int BUF_LEN = 128;
+		private String roomId;
+		private String master;
+		private int turn = 5;
+		private int round = 0;
+		private Vector<UserService> roomUserVec = new Vector<UserService>();
 
-		public ChatRoom(int room_id, Vector<UserService> userVec) {
-			this.setRoomId(room_id);
-			this.setUserVec(userVec);
+		public ChatRoom(String room_id, String master, int turn) {
+			setRoomId(room_id);
+			setMaster(master);
+			setTurn(turn);
 		}
 
 		public void handleChat(String user_id, String msg) {
-			for (int i = 0; i < userVec.size(); i++) {
-				userVec.get(i).WriteChat(user_id, "200", user_id + ":" + msg, roomId);
+			for (int i = 0; i < roomUserVec.size(); i++) {
+				roomUserVec.get(i).WriteChat(user_id, "200", user_id + ":" + msg, getRoomId());
 			}
 		}
 
 		public void handleEtc(ChatMsg cm) {
-			for (int i = 0; i < userVec.size(); i++) {
-				userVec.get(i).WriteOneObject(cm);
+			for (int i = 0; i < roomUserVec.size(); i++) {
+				roomUserVec.get(i).WriteOneObject(cm);
 			}
 		}
 
 		public void handleExit(String user_id) {
-			for (int i = 0; i < userVec.size(); i++) {
-				if (userVec.get(i).userId.equals(user_id)) {
-					userVec.remove(i);
+			for (int i = 0; i < roomUserVec.size(); i++) {
+				if (roomUserVec.get(i).userId.equals(user_id)) {
+					roomUserVec.remove(i);
 					break;
 				}
 			}
+			for (int i = 0; i < roomUserVec.size(); i++) {
+				roomUserVec.get(i).WriteOne("304", user_id);
+			}
 		}
 
-		public int getRoomId() {
-			return roomId;
+		public void handleEnter(String user_id) {
+			for (int i = 0; i < userVec.size(); i++) {
+				if (userVec.get(i).userId.equals(user_id)) {
+					roomUserVec.add(userVec.get(i));
+				}
+			}
+			for (int i = 0; i < roomUserVec.size(); i++) {
+				roomUserVec.get(i).WriteOne("303", user_id);
+			}
 		}
 
-		public void setRoomId(int roomId) {
-			this.roomId = roomId;
+		public void handleStart(String msg) {
+			for (int i = 0; i < roomUserVec.size(); i++) {
+				roomUserVec.get(i).WriteChat(master, "203", msg, roomId);
+			}
+		}
+
+		public void handleEnd(String user_id, String msg) {
+			for (int i = 0; i < roomUserVec.size(); i++) {
+				roomUserVec.get(i).WriteChat(user_id, "204", msg, roomId);
+			}
+		}
+
+		public void handleOver(String user_id, String roundUser) {
+			for (int i = 0; i < roomUserVec.size(); i++) {
+				roomUserVec.get(i).WriteChat(user_id, "205", roundUser, roomId);
+			}
+		}
+
+		public void roundOver() {
+			if (round < turn)
+				round++;
+		}
+
+		public boolean isGameOver() {
+			if (round == turn) {
+				round = 0;
+				return true;
+			}
+			return false;
+		}
+
+		public String getRoundUser() {
+			return roomUserVec.get(round % roomUserVec.size()).userId;
 		}
 
 		public Vector<UserService> getUserVec() {
-			return userVec;
+			return roomUserVec;
 		}
 
-		public void setUserVec(Vector<UserService> userVec) {
-			this.userVec = userVec;
+		public void setUserVec(Vector<UserService> roomUserVec) {
+			this.roomUserVec = roomUserVec;
+		}
+
+		public String getMaster() {
+			return master;
+		}
+
+		public void setMaster(String master) {
+			this.master = master;
+		}
+
+		public String getRoomId() {
+			return roomId;
+		}
+
+		public void setRoomId(String roomId) {
+			this.roomId = roomId;
+		}
+
+		public int getTurn() {
+			return turn;
+		}
+
+		public void setTurn(int turn) {
+			this.turn = turn;
 		}
 
 	}

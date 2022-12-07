@@ -24,8 +24,11 @@
     <fullyQualifiedTypeName name="java.awt.event.WindowStateListener"/>
     <fullyQualifiedTypeName name="java.awt.event.ComponentAdapter"/>
     <fullyQualifiedTypeName name="javax.swing.JToggleButton"/>
-    <fullyQualifiedTypeName name="java.awt.event.ActionListener"/>
-    <fullyQualifiedTypeName name="java.awt.event.WindowListener"/>
     <fullyQualifiedTypeName name="ChatServer.UserService"/>
     <fullyQualifiedTypeName name="java.awt.event.ComponentListener"/>
+    <fullyQualifiedTypeName name="java.awt.event.WindowListener"/>
+    <fullyQualifiedTypeName name="java.awt.event.ActionListener"/>
+    <fullyQualifiedTypeName name="java.util.Random"/>
+    <fullyQualifiedTypeName name="javax.swing.ButtonGroup"/>
+    <fullyQualifiedTypeName name="javax.swing.JRadioButton"/>
 </qualifiedTypeNameHistroy>
